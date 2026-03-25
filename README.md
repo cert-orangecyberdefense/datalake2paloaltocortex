@@ -117,6 +117,9 @@ In addition to lookup commands, Orange Cyberdefense Datalake integration can be 
 | `Use system proxy settings`          | _Keep the default (disabled) unless you know what you're doing._ |
 | `Threshold Suspicious`               | When creating an indicator, set it to "suspicious" when the maximum score is above this threshold. |
 | `Threshold Malicious`                | When creating an indicator, set it to "malicious" when the maximum score is above this threshold. |
+| `Indicator Reputation`               | When creating an indicator, set it to this value, ignoring the "suspicious" and "malicious" thresholds described above. |
+| `Source reliability`                 | Reliability of the source (Datalake) providing the data. By default, selected level is `F - Reliability cannot be judged` but we encourage you to set it higher. |
+| `Indicator Expiration Method`        | How long to retain the indicator. Defaults to the system settings for this indicator type. |
 
 #### 3.4. Automatic import parameters
 
@@ -125,22 +128,43 @@ In addition to lookup commands, Orange Cyberdefense Datalake integration can be 
 | `Datalake queries`                   | List of Datalake query hashes of indicators you want to ingest. Must be formatted in JSON. |
 | `Feed Fetch Interval`                | How often Datalake indicators should be retrieved. |
 | `Fetch Lookback`                     | Additional filter which is added to Datalake queries: How far back in time (in minutes) it should retrieve indicators. |
-| `Indicator Expiration Method`        | How long to retain the indicator. Defaults to the system settings for this indicator type. |
-| `Indicator Reputation`               | When creating an indicator, set it to this value, ignoring the "suspicious" and "malicious" thresholds described above. |
-| `Source reliability`                 | Reliability of the source (Datalake) providing the data. By default, selected level is `F - Reliability cannot be judged` but we encourage you to set it higher. |
 
-### 4. (Optional) Define indicator layouts
+### 4. (Recommended) Enable automatic import of Datalake related fields with enrichment commands
+
+When using enrichment commands, such as `!ip`, `!domain`, `!hashkey`, Datalake indicator fields (`Datalake Scores`, `Datalake Sources`) are not be imported by default. We recommend that you edit your current indicator settings to add those fields.
+
+Mappings:
+- Datalake Hashkey: `Datalake.status.hashkey`
+- Datalake Scores: `Datalake.status.formatted_scores`
+- Datalake Sources: `Datalake.status.sources`
+- Datalake Threat Entities: `Datalake.status.threat_entities`
+
+#### 4.1. Datalake indicator fields in XSOAR
+
+1. Go to "Settings" > "Objects Setup" > "Indicators" > "Types".
+2. Select a supported indicator type, then click "Edit".
+3. Go to the "Custom Fields" tab. There, for each Datalake indicator field, select the corresponding data field.
+4. Repeat the previous steps for each supported indicator type.
+
+#### 4.2. Datalake indicator fields in XSIAM
+
+1. Go to "Settings" > "Configurations" > "Object Setup" > "Indicators".
+2. Select a supported indicator type, then click "Edit".
+3. Go to the "Custom Fields" tab. There, for each Datalake indicator field, select the corresponding data field.
+4. Repeat the previous steps for each supported indicator type.
+
+### 5. (Optional) Define indicator layouts
 
 This content pack adds indicator fields to the indicator object model. However, in order to see them on the GUI, they have to be used as on the layout used by indicators.
 
 We provide basic layouts with those fields. Below are instructions on how to use them, but you might as well create your own, especially if you have specific needs.
 
-#### 4.1. Using the Datalake indicator layout in XSOAR
+#### 5.1. Using the Datalake indicator layout in XSOAR
 
 1. Go to "Settings" > "Objects setup" > "Indicators" > "Types".
 2. For each of the supported indicator type, select the Datalake template for this indicator type, such as `Domain Indicator - Datalake template` (or your own custom layout).
 
-#### 4.2. Using the Datalake indicator layout in XSIAM
+#### 5.2. Using the Datalake indicator layout in XSIAM
 
 1. Go to "Settings" > "Configurations" > "Object Setup" > "Indicators".
 2. For each of the supported indicator type, select the Datalake template for this indicator type, such as `Domain Indicator - Datalake template` (or your own custom layout).

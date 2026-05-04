@@ -30,8 +30,9 @@ As of now, the following indicators are supported:
 
 ## How is this repository organized
 
-- The branch `main` contains this documentation.
-- The branch `demisto/content/master` contains a copy of the master branch from the official repository.
+- The branch `home` contains this documentation.
+- The branch `master` contains a copy of the master branch from the official repository, as well as the stable code for releases of this connector.
+- The branch `develop` contains the current work-in-progress code for the next release. It might not be stable.
 - The [GitHub release page](https://github.com/cert-orangecyberdefense/datalake2paloaltocortex/releases) contains builds of this connector. This is what you should download and install.
 
 ## Installation

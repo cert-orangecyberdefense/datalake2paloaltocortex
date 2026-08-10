@@ -1,0 +1,33 @@
+{
+    "name": "Orange Cyberdefense",
+    "description": "This package provides a seamless integration with Orange Cyberdefense tools and services.",
+    "support": "partner",
+    "currentVersion": "3.0.3",
+    "author": "Orange Cyberdefense",
+    "url": "https://github.com/cert-orangecyberdefense/datalake2paloaltocortex",
+    "categories": [
+        "Data Enrichment & Threat Intelligence"
+    ],
+    "tags": [
+        "Security",
+        "Threat Intelligence",
+        "Threat Intelligence Management"
+    ],
+    "useCases": [
+        "Threat Intelligence Management"
+    ],
+    "keywords": [
+        "orange",
+        "cyberdefense",
+        "ocd",
+        "ti",
+        "cti",
+        "ioc",
+        "datalake",
+        "enrichment"
+    ],
+    "marketplaces": [
+        "xsoar",
+        "marketplacev2"
+    ]
+}

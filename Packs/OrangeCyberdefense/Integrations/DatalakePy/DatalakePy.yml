@@ -1,0 +1,977 @@
+commonfields:
+  id: Orange Cyberdefense Threat Intelligence (Datalake) V3
+  version: -1
+name: Orange Cyberdefense Threat Intelligence (Datalake) V3
+display: Orange Cyberdefense Threat Intelligence (Datalake) V3
+category: Data Enrichment & Threat Intelligence
+fromversion: 6.10.0
+description: Powered by Orange Cyberdefense Datalake platform, this threat intelligence integration provides insights on IP addresses, domains and various other indicators for threat investigations.
+configuration:
+- display: Datalake Environment
+  name: datalakeEnv
+  type: 15
+  required: true
+  options:
+  - preprod
+  - prod
+  defaultvalue: prod
+  section: Connect
+- display: Datalake Long Term Token
+  additionalinfo: You can generate one from Datalake on the "My Account" page.
+  name: longtermToken
+  type: 4
+  required: true
+  section: Connect
+- display: Trust any certificate (not secure)
+  additionalinfo: Disable SSL/TLS certificate validation when enabled.
+  name: insecure
+  type: 8
+  required: false
+  section: Connect
+- display: Use system proxy settings
+  name: proxy
+  type: 8
+  required: false
+  section: Connect
+- display: Threshold Suspicious
+  name: thresholdSuspicious
+  defaultvalue: 30
+  type: 0
+  required: false
+  section: Collect
+- display: Threshold Malicious
+  name: thresholdMalicious
+  defaultvalue: 50
+  type: 0
+  required: false
+  section: Collect
+- display: Fetch indicators
+  name: feed
+  type: 8
+  required: false
+  defaultvalue: 'false'
+  section: Collect
+- display: Datalake queries
+  name: queryHash
+  additionalinfo: Build your own queries from the Datalake website then reference them here using query hashes to customize which indicators you import.
+  defaultvalue: '{"dtl_query_malicious_domains":"d94d625114111e0bb2a2afaeab47b483","dtl_query_malicious_ips":"c879d177c513bee8fbc9586d6d2a231e"}'
+  type: 0
+  required: false
+  section: Collect
+- display: Feed Fetch Interval
+  additionalinfo: How often Datalake indicators should be retrieved.
+  name: feedFetchInterval
+  type: 19
+  required: false
+  defaultvalue: "240"
+  section: Collect
+- display: Fetch Lookback (minutes)
+  additionalinfo: How far back in time (in minutes) should it retrieve indicators.
+  name: fetchLookback
+  defaultvalue: 240
+  type: 0
+  required: true
+  section: Collect
+- display: ""
+  name: feedExpirationInterval
+  defaultvalue: "20160"
+  type: 1
+  required: false
+  section: Collect
+- display: ""
+  name: feedExpirationPolicy
+  defaultvalue: indicatorType
+  type: 17
+  options:
+  - never
+  - interval
+  - indicatorType
+  - suddenDeath
+  required: false
+  section: Collect
+- display: Indicator Reputation
+  name: feedReputation
+  defaultvalue: feedInstanceReputationNotSet
+  type: 18
+  options:
+  - None
+  - Good
+  - Suspicious
+  - Bad
+  required: false
+  additionalinfo: Indicators from this integration instance will be marked with this reputation.
+  section: Collect
+- display: Source Reliability
+  name: feedReliability
+  type: 15
+  required: true
+  options:
+  - A - Completely reliable
+  - B - Usually reliable
+  - C - Fairly reliable
+  - D - Not usually reliable
+  - E - Unreliable
+  - F - Reliability cannot be judged
+  defaultvalue: F - Reliability cannot be judged
+  section: Collect
+- display: Bypass exclusion list
+  name: feedBypassExclusionList
+  type: 8
+  required: false
+  defaultvalue: ""
+  additionalinfo: When selected, the exclusion list is ignored for indicators from this feed. This means that if an indicator from this feed is on the exclusion list, the indicator might still be added to the system.
+  section: Collect
+- display: Add Datalake tags to indicator tags
+  name: addTags
+  type: 8
+  required: false
+  defaultvalue: 'true'
+  additionalinfo: When enabled, Datalake tags are also written to the indicator "tags" field.
+  section: Collect
+- display: Tags
+  name: feedTags
+  type: 0
+  additionalinfo: Supports CSV values.
+  section: Collect
+- display: Traffic Light Protocol Color
+  name: tlp_color
+  type: 15
+  required: false
+  options:
+  - RED
+  - AMBER
+  - GREEN
+  - WHITE
+  additionalinfo: The Traffic Light Protocol (TLP) designation to apply to indicators fetched from the feed
+  section: Collect
+script:
+  script: '-'
+  type: python
+  commands:
+  - name: domain
+    arguments:
+    - name: domain
+      description: List of domains for which to retrieve the reputation information.
+      required: true
+      default: true
+      isArray: true
+    outputs:
+    - contextPath: Datalake.status.indicator
+      description: The indicator value.
+      type: String
+    - contextPath: Datalake.status.atom_type
+      description: The indicator type as classified by Datalake (e.g. ip, domain, url, file, email).
+      type: String
+    - contextPath: Datalake.status.hashkey
+      description: The Datalake unique identifier for this indicator.
+      type: String
+    - contextPath: Datalake.status.status
+      description: Reputation of the indicator.
+      type: String
+    - contextPath: Datalake.status.found
+      description: Whether the indicator was found in Datalake.
+      type: Boolean
+    - contextPath: Datalake.status.last_updated
+      description: The date the indicator was last updated in Datalake.
+      type: Date
+    - contextPath: Datalake.status.system_first_seen
+      description: The date the indicator was first seen in Datalake.
+      type: Date
+    - contextPath: Datalake.status.first_seen
+      description: The date the indicator was first reported by a source.
+      type: Date
+    - contextPath: Datalake.status.scores
+      description: Comma-separated Datalake risk scores per threat type (e.g. "hack:10, malware:0").
+      type: String
+    - contextPath: Datalake.status.formatted_scores
+      description: Datalake risk scores per threat type, padded with '-' for missing types.
+      type: Unknown
+    - contextPath: Datalake.status.sources
+      description: List of source IDs that reported the indicator in Datalake.
+      type: String
+    - contextPath: Datalake.status.tags
+      description: Datalake tags associated with the indicator.
+      type: String
+    - contextPath: Datalake.status.threat_entities
+      description: 'List of threat entities linked to the indicator (e.g. "Malware: Cobalt Strike").'
+      type: String
+    - contextPath: Datalake.status.description
+      description: Human-readable summary of the indicator reputation and flagged categories.
+      type: String
+    - contextPath: Domain.Name
+      description: The domain name.
+      type: String
+    - contextPath: DBotScore.Indicator
+      description: The indicator that was tested.
+      type: String
+    - contextPath: DBotScore.Type
+      description: The indicator type.
+      type: String
+    - contextPath: DBotScore.Vendor
+      description: The vendor used to calculate the score.
+      type: String
+    - contextPath: DBotScore.Score
+      description: The actual score.
+      type: Number
+    - contextPath: DBotScore.Reliability
+      description: Reliability of the source providing the intelligence data.
+      type: String
+    description: Checks the reputation of domains.
+  - name: url
+    arguments:
+    - name: url
+      description: List of URLs for which to retrieve the reputation information.
+      required: true
+      default: true
+      isArray: true
+    outputs:
+    - contextPath: Datalake.status.indicator
+      description: The indicator value.
+      type: String
+    - contextPath: Datalake.status.atom_type
+      description: The indicator type as classified by Datalake (e.g. ip, domain, url, file, email).
+      type: String
+    - contextPath: Datalake.status.hashkey
+      description: The Datalake unique identifier for this indicator.
+      type: String
+    - contextPath: Datalake.status.status
+      description: Reputation of the indicator.
+      type: String
+    - contextPath: Datalake.status.found
+      description: Whether the indicator was found in Datalake.
+      type: Boolean
+    - contextPath: Datalake.status.last_updated
+      description: The date the indicator was last updated in Datalake.
+      type: Date
+    - contextPath: Datalake.status.system_first_seen
+      description: The date the indicator was first seen in Datalake.
+      type: Date
+    - contextPath: Datalake.status.first_seen
+      description: The date the indicator was first reported by a source.
+      type: Date
+    - contextPath: Datalake.status.scores
+      description: Comma-separated Datalake risk scores per threat type (e.g. "hack:10, malware:0").
+      type: String
+    - contextPath: Datalake.status.formatted_scores
+      description: Datalake risk scores per threat type, padded with '-' for missing types.
+      type: Unknown
+    - contextPath: Datalake.status.sources
+      description: List of source IDs that reported the indicator in Datalake.
+      type: String
+    - contextPath: Datalake.status.tags
+      description: Datalake tags associated with the indicator.
+      type: String
+    - contextPath: Datalake.status.threat_entities
+      description: 'List of threat entities linked to the indicator (e.g. "Malware: Cobalt Strike").'
+      type: String
+    - contextPath: Datalake.status.description
+      description: Human-readable summary of the indicator reputation and flagged categories.
+      type: String
+    - contextPath: URL.Data
+      description: The URL.
+      type: String
+    - contextPath: DBotScore.Indicator
+      description: The indicator that was tested.
+      type: String
+    - contextPath: DBotScore.Type
+      description: The indicator type.
+      type: String
+    - contextPath: DBotScore.Vendor
+      description: The vendor used to calculate the score.
+      type: String
+    - contextPath: DBotScore.Score
+      description: The actual score.
+      type: Number
+    - contextPath: DBotScore.Reliability
+      description: Reliability of the source providing the intelligence data.
+      type: String
+    description: Checks the reputation of URLs.
+  - name: ip
+    arguments:
+    - name: ip
+      description: List of IPs for which to retrieve the reputation information.
+      required: true
+      default: true
+      isArray: true
+    outputs:
+    - contextPath: Datalake.status.indicator
+      description: The indicator value.
+      type: String
+    - contextPath: Datalake.status.atom_type
+      description: The indicator type as classified by Datalake (e.g. ip, domain, url, file, email).
+      type: String
+    - contextPath: Datalake.status.hashkey
+      description: The Datalake unique identifier for this indicator.
+      type: String
+    - contextPath: Datalake.status.status
+      description: Reputation of the indicator.
+      type: String
+    - contextPath: Datalake.status.found
+      description: Whether the indicator was found in Datalake.
+      type: Boolean
+    - contextPath: Datalake.status.last_updated
+      description: The date the indicator was last updated in Datalake.
+      type: Date
+    - contextPath: Datalake.status.system_first_seen
+      description: The date the indicator was first seen in Datalake.
+      type: Date
+    - contextPath: Datalake.status.first_seen
+      description: The date the indicator was first reported by a source.
+      type: Date
+    - contextPath: Datalake.status.scores
+      description: Comma-separated Datalake risk scores per threat type (e.g. "hack:10, malware:0").
+      type: String
+    - contextPath: Datalake.status.formatted_scores
+      description: Datalake risk scores per threat type, padded with '-' for missing types.
+      type: Unknown
+    - contextPath: Datalake.status.sources
+      description: List of source IDs that reported the indicator in Datalake.
+      type: String
+    - contextPath: Datalake.status.tags
+      description: Datalake tags associated with the indicator.
+      type: String
+    - contextPath: Datalake.status.threat_entities
+      description: 'List of threat entities linked to the indicator (e.g. "Malware: Cobalt Strike").'
+      type: String
+    - contextPath: Datalake.status.description
+      description: Human-readable summary of the indicator reputation and flagged categories.
+      type: String
+    - contextPath: IP.Address
+      description: The IP address.
+      type: String
+    - contextPath: IP.Geo.Country
+      description: The country in which the IP address is located.
+      type: String
+    - contextPath: IP.Geo.Location
+      description: 'The geolocation where the IP address is located, in the format: latitude:longitude.'
+      type: String
+    - contextPath: DBotScore.Indicator
+      description: The indicator that was tested.
+      type: String
+    - contextPath: DBotScore.Type
+      description: The indicator type.
+      type: String
+    - contextPath: DBotScore.Vendor
+      description: The vendor used to calculate the score.
+      type: String
+    - contextPath: DBotScore.Score
+      description: The actual score.
+      type: Number
+    - contextPath: DBotScore.Reliability
+      description: Reliability of the source providing the intelligence data.
+      type: String
+    description: Checks the reputation of IP addresses.
+  - name: email
+    arguments:
+    - name: email
+      description: List of emails for which to retrieve the reputation information.
+      required: true
+      default: true
+      isArray: true
+    outputs:
+    - contextPath: Datalake.status.indicator
+      description: The indicator value.
+      type: String
+    - contextPath: Datalake.status.atom_type
+      description: The indicator type as classified by Datalake (e.g. ip, domain, url, file, email).
+      type: String
+    - contextPath: Datalake.status.hashkey
+      description: The Datalake unique identifier for this indicator.
+      type: String
+    - contextPath: Datalake.status.status
+      description: Reputation of the indicator.
+      type: String
+    - contextPath: Datalake.status.found
+      description: Whether the indicator was found in Datalake.
+      type: Boolean
+    - contextPath: Datalake.status.last_updated
+      description: The date the indicator was last updated in Datalake.
+      type: Date
+    - contextPath: Datalake.status.system_first_seen
+      description: The date the indicator was first seen in Datalake.
+      type: Date
+    - contextPath: Datalake.status.first_seen
+      description: The date the indicator was first reported by a source.
+      type: Date
+    - contextPath: Datalake.status.scores
+      description: Comma-separated Datalake risk scores per threat type (e.g. "hack:10, malware:0").
+      type: String
+    - contextPath: Datalake.status.formatted_scores
+      description: Datalake risk scores per threat type, padded with '-' for missing types.
+      type: Unknown
+    - contextPath: Datalake.status.sources
+      description: List of source IDs that reported the indicator in Datalake.
+      type: String
+    - contextPath: Datalake.status.tags
+      description: Datalake tags associated with the indicator.
+      type: String
+    - contextPath: Datalake.status.threat_entities
+      description: 'List of threat entities linked to the indicator (e.g. "Malware: Cobalt Strike").'
+      type: String
+    - contextPath: Datalake.status.description
+      description: Human-readable summary of the indicator reputation and flagged categories.
+      type: String
+    - contextPath: Account.Email.Address
+      description: The email address.
+      type: String
+    - contextPath: DBotScore.Indicator
+      description: The indicator that was tested.
+      type: String
+    - contextPath: DBotScore.Type
+      description: The indicator type.
+      type: String
+    - contextPath: DBotScore.Vendor
+      description: The vendor used to calculate the score.
+      type: String
+    - contextPath: DBotScore.Score
+      description: The actual score.
+      type: Number
+    - contextPath: DBotScore.Reliability
+      description: Reliability of the source providing the intelligence data.
+      type: String
+    description: Checks the reputation of email addresses.
+  - name: file
+    arguments:
+    - name: file
+      description: List of file hashes for which to retrieve the reputation information.
+      required: true
+      default: true
+      isArray: true
+    outputs:
+    - contextPath: Datalake.status.indicator
+      description: The indicator value.
+      type: String
+    - contextPath: Datalake.status.atom_type
+      description: The indicator type as classified by Datalake (e.g. ip, domain, url, file, email).
+      type: String
+    - contextPath: Datalake.status.hashkey
+      description: The Datalake unique identifier for this indicator.
+      type: String
+    - contextPath: Datalake.status.status
+      description: Reputation of the indicator.
+      type: String
+    - contextPath: Datalake.status.found
+      description: Whether the indicator was found in Datalake.
+      type: Boolean
+    - contextPath: Datalake.status.last_updated
+      description: The date the indicator was last updated in Datalake.
+      type: Date
+    - contextPath: Datalake.status.system_first_seen
+      description: The date the indicator was first seen in Datalake.
+      type: Date
+    - contextPath: Datalake.status.first_seen
+      description: The date the indicator was first reported by a source.
+      type: Date
+    - contextPath: Datalake.status.scores
+      description: Comma-separated Datalake risk scores per threat type (e.g. "hack:10, malware:0").
+      type: String
+    - contextPath: Datalake.status.formatted_scores
+      description: Datalake risk scores per threat type, padded with '-' for missing types.
+      type: Unknown
+    - contextPath: Datalake.status.sources
+      description: List of source IDs that reported the indicator in Datalake.
+      type: String
+    - contextPath: Datalake.status.tags
+      description: Datalake tags associated with the indicator.
+      type: String
+    - contextPath: Datalake.status.threat_entities
+      description: 'List of threat entities linked to the indicator (e.g. "Malware: Cobalt Strike").'
+      type: String
+    - contextPath: Datalake.status.description
+      description: Human-readable summary of the indicator reputation and flagged categories.
+      type: String
+    - contextPath: File.MD5
+      description: The MD5 hash of the file.
+      type: String
+    - contextPath: File.SHA1
+      description: The SHA1 hash of the file.
+      type: String
+    - contextPath: File.SHA256
+      description: The SHA256 hash of the file.
+      type: String
+    - contextPath: File.SHA512
+      description: The SHA512 hash of the file.
+      type: String
+    - contextPath: DBotScore.Indicator
+      description: The indicator that was tested.
+      type: String
+    - contextPath: DBotScore.Type
+      description: The indicator type.
+      type: String
+    - contextPath: DBotScore.Vendor
+      description: The vendor used to calculate the score.
+      type: String
+    - contextPath: DBotScore.Score
+      description: The actual score.
+      type: Number
+    - contextPath: DBotScore.Reliability
+      description: Reliability of the source providing the intelligence data.
+      type: String
+    description: Checks the reputation of file hashes.
+  - name: hashkey
+    arguments:
+    - name: hashkey
+      description: List of Datalake hashkeys for which to retrieve the reputation information.
+      required: true
+      default: true
+      isArray: true
+    outputs:
+    - contextPath: Datalake.status.indicator
+      description: The indicator value.
+      type: String
+    - contextPath: Datalake.status.atom_type
+      description: The indicator type as classified by Datalake (e.g. ip, domain, url, file, email).
+      type: String
+    - contextPath: Datalake.status.hashkey
+      description: The Datalake unique identifier for this indicator.
+      type: String
+    - contextPath: Datalake.status.status
+      description: Reputation of the indicator.
+      type: String
+    - contextPath: Datalake.status.found
+      description: Whether the indicator was found in Datalake.
+      type: Boolean
+    - contextPath: Datalake.status.last_updated
+      description: The date the indicator was last updated in Datalake.
+      type: Date
+    - contextPath: Datalake.status.system_first_seen
+      description: The date the indicator was first seen in Datalake.
+      type: Date
+    - contextPath: Datalake.status.first_seen
+      description: The date the indicator was first reported by a source.
+      type: Date
+    - contextPath: Datalake.status.scores
+      description: Comma-separated Datalake risk scores per threat type (e.g. "hack:10, malware:0").
+      type: String
+    - contextPath: Datalake.status.formatted_scores
+      description: Datalake risk scores per threat type, padded with '-' for missing types.
+      type: Unknown
+    - contextPath: Datalake.status.sources
+      description: List of source IDs that reported the indicator in Datalake.
+      type: String
+    - contextPath: Datalake.status.tags
+      description: Datalake tags associated with the indicator.
+      type: String
+    - contextPath: Datalake.status.threat_entities
+      description: 'List of threat entities linked to the indicator (e.g. "Malware: Cobalt Strike").'
+      type: String
+    - contextPath: Datalake.status.description
+      description: Human-readable summary of the indicator reputation and flagged categories.
+      type: String
+    - contextPath: DBotScore.Indicator
+      description: The indicator that was tested.
+      type: String
+    - contextPath: DBotScore.Type
+      description: The indicator type.
+      type: String
+    - contextPath: DBotScore.Vendor
+      description: The vendor used to calculate the score.
+      type: String
+    - contextPath: DBotScore.Score
+      description: The actual score.
+      type: Number
+    - contextPath: DBotScore.Reliability
+      description: Reliability of the source providing the intelligence data.
+      type: String
+    description: Deprecated. Use ***datalake-lookup-hashkey*** instead.
+    deprecated: true
+  - name: datalake-lookup-hashkey
+    arguments:
+    - name: hashkey
+      description: List of Datalake hashkeys for which to retrieve the reputation information.
+      required: true
+      default: true
+      isArray: true
+    outputs:
+    - contextPath: Datalake.status.indicator
+      description: The indicator value.
+      type: String
+    - contextPath: Datalake.status.atom_type
+      description: The indicator type as classified by Datalake (e.g. ip, domain, url, file, email).
+      type: String
+    - contextPath: Datalake.status.hashkey
+      description: The Datalake unique identifier for this indicator.
+      type: String
+    - contextPath: Datalake.status.status
+      description: Reputation of the indicator.
+      type: String
+    - contextPath: Datalake.status.found
+      description: Whether the indicator was found in Datalake.
+      type: Boolean
+    - contextPath: Datalake.status.last_updated
+      description: The date the indicator was last updated in Datalake.
+      type: Date
+    - contextPath: Datalake.status.system_first_seen
+      description: The date the indicator was first seen in Datalake.
+      type: Date
+    - contextPath: Datalake.status.first_seen
+      description: The date the indicator was first reported by a source.
+      type: Date
+    - contextPath: Datalake.status.scores
+      description: Comma-separated Datalake risk scores per threat type (e.g. "hack:10, malware:0").
+      type: String
+    - contextPath: Datalake.status.formatted_scores
+      description: Datalake risk scores per threat type, padded with '-' for missing types.
+      type: Unknown
+    - contextPath: Datalake.status.sources
+      description: List of source IDs that reported the indicator in Datalake.
+      type: String
+    - contextPath: Datalake.status.tags
+      description: Datalake tags associated with the indicator.
+      type: String
+    - contextPath: Datalake.status.threat_entities
+      description: 'List of threat entities linked to the indicator (e.g. "Malware: Cobalt Strike").'
+      type: String
+    - contextPath: Datalake.status.description
+      description: Human-readable summary of the indicator reputation and flagged categories.
+      type: String
+    - contextPath: DBotScore.Indicator
+      description: The indicator that was tested.
+      type: String
+    - contextPath: DBotScore.Type
+      description: The indicator type.
+      type: String
+    - contextPath: DBotScore.Vendor
+      description: The vendor used to calculate the score.
+      type: String
+    - contextPath: DBotScore.Score
+      description: The actual score.
+      type: Number
+    - contextPath: DBotScore.Reliability
+      description: Reliability of the source providing the intelligence data.
+      type: String
+    description: Checks the reputation of a specific indicator given its Datalake hashkey.
+  - name: submit_sightings
+    arguments:
+    - name: start_timestamp
+      description: Start of the sighting observation period.
+      required: true
+    - name: end_timestamp
+      description: End of the sighting observation period. Can be identical to start_timestamp.
+      required: true
+    - name: sighting_type
+      description: Sighting type. If POSITIVE or NEGATIVE, threat_types becomes mandatory.
+      required: true
+      auto: PREDEFINED
+      predefined:
+      - POSITIVE
+      - NEGATIVE
+      - NEUTRAL
+    - name: description_visibility
+      description: Sighting description visibility (sighting is always public, description can be hidden). Defaults to ORGANIZATION.
+      auto: PREDEFINED
+      predefined:
+      - ORGANIZATION
+      - PUBLIC
+    - name: visibility
+      description: Deprecated. Use description_visibility instead.
+      deprecated: true
+    - name: threat_types
+      description: Datalake threat types for this sighting.
+      auto: PREDEFINED
+      predefined:
+      - DDOS
+      - FRAUD
+      - HACK
+      - LEAK
+      - MALWARE
+      - PHISHING
+      - SCAM
+      - SCAN
+      - SPAM
+    - name: atoms
+      description: List of indicators for this sighting.
+      required: true
+    - name: atoms_type
+      description: List of indicator types for this sighting. Must match the number of atoms.
+      required: true
+      auto: PREDEFINED
+      predefined:
+      - FileAtom
+      - IpAtom
+      - EmailAtom
+      - UrlAtom
+      - DomainAtom
+      isArray: true
+    - name: count
+      description: Number of time the indicators where observed over the time period.
+      defaultValue: "1"
+    - name: tags
+      description: Datalake tags for this sighting.
+    - name: description
+      description: Description for this sighting. Will be public or restricted to an organization depending on the value of "description_visibility".
+    - name: impersonate_id
+      description: Datalake Organization ID to impersonate.
+    - name: impersonateID
+      description: Deprecated. Use impersonate_id instead.
+      deprecated: true
+    outputs:
+    - contextPath: Datalake.Sighting.uid
+      description: The unique identifier of the sighting.
+      type: String
+    - contextPath: Datalake.Sighting.type
+      description: The sighting type (positive, negative, or neutral).
+      type: String
+    - contextPath: Datalake.Sighting.count
+      description: Number of times the indicators were observed over the time period.
+      type: Number
+    - contextPath: Datalake.Sighting.start_timestamp
+      description: Start of the sighting observation period.
+      type: Date
+    - contextPath: Datalake.Sighting.end_timestamp
+      description: End of the sighting observation period.
+      type: Date
+    - contextPath: Datalake.Sighting.timestamp_created
+      description: The date the sighting was created in Datalake.
+      type: Date
+    - contextPath: Datalake.Sighting.description_visibility
+      description: Visibility of the sighting description (PUBLIC or ORGANIZATION).
+      type: String
+    - contextPath: Datalake.Sighting.reliability
+      description: Reliability score of the sighting source.
+      type: Number
+    - contextPath: Datalake.Sighting.relation_type
+      description: The relation type of the sighting.
+      type: String
+    - contextPath: Datalake.Sighting.sighting_version
+      description: Version of the sighting format.
+      type: String
+    - contextPath: Datalake.Sighting.editable
+      description: Whether the sighting can be edited.
+      type: Boolean
+    - contextPath: Datalake.Sighting.threat_types
+      description: Datalake threat types associated with the sighting.
+      type: String
+    - contextPath: Datalake.Sighting.sightings
+      description: Sighted indicators grouped by type.
+      type: Unknown
+    - contextPath: Datalake.Sighting.source_context
+      description: Source information for the sighting.
+      type: Unknown
+    - contextPath: Datalake.Sighting.tags
+      description: Tags associated with the sighting.
+      type: Unknown
+    description: Deprecated. Use ***datalake-submit-sightings*** instead.
+    deprecated: true
+  - name: datalake-submit-sightings
+    arguments:
+    - name: start_timestamp
+      description: Start of the sighting observation period.
+      required: true
+    - name: end_timestamp
+      description: End of the sighting observation period. Can be identical to start_timestamp.
+      required: true
+    - name: sighting_type
+      description: Sighting type. If POSITIVE or NEGATIVE, threat_types becomes mandatory.
+      required: true
+      auto: PREDEFINED
+      predefined:
+      - POSITIVE
+      - NEGATIVE
+      - NEUTRAL
+    - name: description_visibility
+      description: Sighting description visibility (sighting is always public, description can be hidden). Defaults to ORGANIZATION.
+      auto: PREDEFINED
+      predefined:
+      - ORGANIZATION
+      - PUBLIC
+    - name: visibility
+      description: Deprecated. Use description_visibility instead.
+      deprecated: true
+    - name: threat_types
+      description: Datalake threat types for this sighting.
+      auto: PREDEFINED
+      predefined:
+      - DDOS
+      - FRAUD
+      - HACK
+      - LEAK
+      - MALWARE
+      - PHISHING
+      - SCAM
+      - SCAN
+      - SPAM
+    - name: atoms
+      description: List of indicators for this sighting.
+      required: true
+    - name: atoms_type
+      description: List of indicator types for this sighting. Must match the number of atoms.
+      required: true
+      auto: PREDEFINED
+      predefined:
+      - FileAtom
+      - IpAtom
+      - EmailAtom
+      - UrlAtom
+      - DomainAtom
+      isArray: true
+    - name: count
+      description: Number of time the indicators where observed over the time period.
+      defaultValue: "1"
+    - name: tags
+      description: Datalake tags for this sighting.
+    - name: description
+      description: Description for this sighting. Will be public or restricted to an organization depending on the value of "description_visibility".
+    - name: impersonate_id
+      description: Datalake Organization ID to impersonate.
+    - name: impersonateID
+      description: Deprecated. Use impersonate_id instead.
+      deprecated: true
+    outputs:
+    - contextPath: Datalake.Sighting.uid
+      description: The unique identifier of the sighting.
+      type: String
+    - contextPath: Datalake.Sighting.type
+      description: The sighting type (positive, negative, or neutral).
+      type: String
+    - contextPath: Datalake.Sighting.count
+      description: Number of times the indicators were observed over the time period.
+      type: Number
+    - contextPath: Datalake.Sighting.start_timestamp
+      description: Start of the sighting observation period.
+      type: Date
+    - contextPath: Datalake.Sighting.end_timestamp
+      description: End of the sighting observation period.
+      type: Date
+    - contextPath: Datalake.Sighting.timestamp_created
+      description: The date the sighting was created in Datalake.
+      type: Date
+    - contextPath: Datalake.Sighting.description_visibility
+      description: Visibility of the sighting description (PUBLIC or ORGANIZATION).
+      type: String
+    - contextPath: Datalake.Sighting.reliability
+      description: Reliability score of the sighting source.
+      type: Number
+    - contextPath: Datalake.Sighting.relation_type
+      description: The relation type of the sighting.
+      type: String
+    - contextPath: Datalake.Sighting.sighting_version
+      description: Version of the sighting format.
+      type: String
+    - contextPath: Datalake.Sighting.editable
+      description: Whether the sighting can be edited.
+      type: Boolean
+    - contextPath: Datalake.Sighting.threat_types
+      description: Datalake threat types associated with the sighting.
+      type: String
+    - contextPath: Datalake.Sighting.sightings
+      description: Sighted indicators grouped by type.
+      type: Unknown
+    - contextPath: Datalake.Sighting.source_context
+      description: Source information for the sighting.
+      type: Unknown
+    - contextPath: Datalake.Sighting.tags
+      description: Tags associated with the sighting.
+      type: Unknown
+    description: Submit a sighting to Orange Cyberdefense Datalake. Requires advanced privileges.
+  - name: bulk_search
+    arguments:
+    - name: query_hash
+      description: Datalake query hash.
+    - name: query_body
+      description: Datalake query body.
+    - name: output_file_type
+      description: Output format of the query run.
+      required: true
+      auto: PREDEFINED
+      predefined:
+      - JSON
+      - CSV
+    - name: task_id
+      hidden: true
+      description: Datalake task ID associated with a specific query execution.
+    - name: polling
+      description: Whether to poll or wait synchronously for the results.
+      auto: PREDEFINED
+      predefined:
+      - "true"
+      - "false"
+      defaultValue: "true"
+    description: Deprecated. Use ***datalake-bulk-search*** instead.
+    deprecated: true
+    timeout: 300
+    polling: true
+  - name: datalake-bulk-search
+    arguments:
+    - name: query_hash
+      description: Datalake query hash.
+    - name: query_body
+      description: Datalake query body.
+    - name: output_file_type
+      description: Output format of the query run.
+      required: true
+      auto: PREDEFINED
+      predefined:
+      - JSON
+      - CSV
+    - name: task_id
+      hidden: true
+      description: Datalake task ID associated with a specific query execution.
+    - name: polling
+      description: Whether to poll or wait synchronously for the results.
+      auto: PREDEFINED
+      predefined:
+      - "true"
+      - "false"
+      defaultValue: "true"
+    description: Retrieve multiple indicators from Datalake by making a Bulk Search query.
+    timeout: 300
+    polling: true
+  - name: import-indicators
+    arguments:
+    - name: query_hash
+      description: Datalake query hash.
+    - name: query_body
+      description: Datalake query body.
+    - name: tag
+      description: Tag used to label the IOCs imported.
+    - name: task_id
+      hidden: true
+      description: Datalake task ID associated with a specific query execution.
+    - name: polling
+      description: Whether to poll or wait synchronously for the results.
+      auto: PREDEFINED
+      predefined:
+      - "true"
+      - "false"
+      defaultValue: "true"
+    description: Deprecated. Use ***datalake-import-indicators*** instead.
+    deprecated: true
+    timeout: 300
+    polling: true
+  - name: datalake-import-indicators
+    arguments:
+    - name: query_hash
+      description: Datalake query hash.
+    - name: query_body
+      description: Datalake query body.
+    - name: tag
+      description: Tag used to label the IOCs imported.
+    - name: task_id
+      hidden: true
+      description: Datalake task ID associated with a specific query execution.
+    - name: polling
+      description: Whether to poll or wait synchronously for the results.
+      auto: PREDEFINED
+      predefined:
+      - "true"
+      - "false"
+      defaultValue: "true"
+    description: Import indicators from Datalake using query_body or query_hash.
+    timeout: 300
+    polling: true
+  - name: fetch-indicators
+    hidden: true
+    description: Fetches indicators from Datalake and imports them into XSOAR.
+    timeout: 2000
+  dockerimage: ocddev/demisto-ocd-cti:3.0.1
+  feed: true
+  runonce: false
+  subtype: python3
+  isFetchSamples: true
+sectionorder:
+- Connect
+- Collect
+- Optimize
+tests:
+- No tests (auto formatted)

@@ -1,0 +1,16 @@
+# Lookup/Enrichment commands
+!ip ip=8.8.8.8
+!domain domain=google.com
+!email email=test@example.com
+!file file=c71c102f70e213978d08bbe5b5fd42d4
+!url url=https://google.com
+!datalake-lookup-hashkey hashkey=52375fdc212d0b290391c1ca12f47e52
+
+# Execute a bulk search and get the result as a file
+!datalake-bulk-search output_file_type=JSON query_hash=4e47a9366ee10b6e8de1519391a6931f
+
+# Execute a bulk search and import the resulting indicators
+!datalake-import-indicators query_hash=4e47a9366ee10b6e8de1519391a6931f
+
+# Submit sightings to Datalake (requires specific permissions)
+!datalake-submit-sightings atoms=malicious.example.com atoms_type=DomainAtom end_timestamp=2026-07-22T08:37:29Z start_timestamp=2026-07-22T08:37:29Z sighting_type=POSITIVE threat_types=HACK visibility=PUBLIC

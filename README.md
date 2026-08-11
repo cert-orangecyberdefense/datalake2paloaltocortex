@@ -132,12 +132,13 @@ In addition to lookup commands, Orange Cyberdefense Datalake integration can be 
 
 ### 4. (Recommended) Enable automatic import of Datalake related fields with enrichment commands
 
-When using enrichment commands, such as `!ip`, `!domain`, `!hashkey`, Datalake indicator fields (`Datalake Scores`, `Datalake Sources`) are not be imported by default. We recommend that you edit your current indicator settings to add those fields.
+When using enrichment commands, such as `!ip`, `!domain`, `!datalake-lookup-hashkey`, Datalake indicator fields (`Datalake Scores`, `Datalake Sources`, ...) are not be imported by default. We recommend that you edit your current indicator settings to add those fields.
 
 Mappings:
 - Datalake Hashkey: `Datalake.status.hashkey`
 - Datalake Scores: `Datalake.status.formatted_scores`
 - Datalake Sources: `Datalake.status.sources`
+- Datalake Tags: `Datalake.status.tags`
 - Datalake Threat Entities: `Datalake.status.threat_entities`
 
 #### 4.1. Datalake indicator fields in XSOAR
